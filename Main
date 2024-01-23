@@ -1,0 +1,245 @@
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+
+    struct Endereco {
+        char rua[40];
+        int numeroCasa;
+        char bairro[20];
+        char cidade[20];
+        char estado[20];
+    };
+
+    struct Materia {
+        char nomeMateria[20];
+        float mediaMateria;
+    };
+
+    struct Aluno {
+        char nome[25];
+        int RA;
+        char dataNascimento[10];
+        struct Endereco endereco1;
+        struct Endereco endereco2;
+        struct Materia materia[5];
+    };
+
+    void apagaInformacoes(struct Aluno *aluno) {
+        // Limpa os dados de um aluno
+        strcpy(aluno->nome, "");
+        aluno->RA = 0;
+        strcpy(aluno->dataNascimento, "");
+        strcpy(aluno->endereco1.rua, "");
+        aluno->endereco1.numeroCasa = 0;
+        strcpy(aluno->endereco1.estado, "");
+        strcpy(aluno->endereco1.cidade, "");
+        strcpy(aluno->endereco1.bairro, "");
+        strcpy(aluno->endereco2.rua, "");
+        aluno->endereco2.numeroCasa = 0;
+        strcpy(aluno->endereco2.estado, "");
+        strcpy(aluno->endereco2.cidade, "");
+        strcpy(aluno->endereco2.bairro, "");
+        strcpy(aluno->materia[0].nomeMateria, "");
+        aluno->materia[0].mediaMateria = 0;
+        strcpy(aluno->materia[1].nomeMateria, "");
+        aluno->materia[1].mediaMateria = 0;
+        strcpy(aluno->materia[2].nomeMateria, "");
+        aluno->materia[2].mediaMateria = 0;
+        strcpy(aluno->materia[3].nomeMateria, "");
+        aluno->materia[3].mediaMateria = 0;
+        strcpy(aluno->materia[4].nomeMateria, "");
+        aluno->materia[4].mediaMateria = 0;
+    }
+
+    void redimensionaVetor(struct Aluno **aluno, int novoTamanho) {
+        // Redimensiona o vetor dinâmico
+        *aluno = realloc(*aluno, novoTamanho * sizeof(struct Aluno));
+    }
+
+    int VerificaArmazenamento(struct Aluno *aluno, int tamanhoVetor) {
+        // Verifica se há espaço para armazenar um novo aluno
+        for (int i = 0; i < tamanhoVetor; i++) {
+            if (strlen(aluno[i].nome) == 0) {
+                printf("Espaco vazio encontrado, pode armazenar um novo aluno!\n");
+                return i;
+            }
+        }
+
+        printf("Redimensionando vetor...\n");
+        redimensionaVetor(&aluno, tamanhoVetor * 2);  // Dobrando o tamanho
+        return tamanhoVetor / 2;  // Retorna a posição onde o novo aluno será inserido no vetor redimensionado
+    }
+
+    int VerificaRA(struct Aluno *aluno, int RA_aluno, int tamanhoVetor) {
+        // Verifica se um RA já está cadastrado
+        for (int i = 0; i < tamanhoVetor; i++) {
+            if (aluno[i].RA == RA_aluno) {
+                printf("RA ja esta armazenado!\n");
+                return 0;
+            }
+        }
+        printf("RA nao esta armazenado!\n");
+        return 1;
+    }
+
+    void CriarAluno(struct Aluno *aluno, int *tamanhoVetor) {
+        // Cria um novo aluno
+        int refRAbool, RA_aluno;
+        int i = VerificaArmazenamento(aluno, *tamanhoVetor);
+
+        if (i > -1) {
+            printf("Digite o nome do aluno:\n");
+            setbuf(stdin, NULL);
+            fgets(aluno[i].nome, sizeof(aluno[i].nome), stdin);
+
+            if (strlen(aluno[i].nome) == 0) {
+                strcpy(aluno[i].nome, "Aluno");
+            }
+
+            printf("Digite o RA do aluno:\n");
+            scanf("%d", &RA_aluno);
+            refRAbool = VerificaRA(aluno, RA_aluno, *tamanhoVetor);
+
+            if (refRAbool == 1) {
+                aluno[i].RA = RA_aluno;
+                printf("Digite a data de nascimento do aluno:\n");
+                setbuf(stdin, NULL);
+                fgets(aluno[i].dataNascimento, sizeof(aluno[i].dataNascimento), stdin);
+                printf("Digite a rua 1 do aluno:\n");
+                setbuf(stdin, NULL);
+                fgets(aluno[i].endereco1.rua, sizeof(aluno[i].endereco1.rua), stdin);
+                printf("Aluno foi registrado com sucesso!\n");
+            } else {
+                printf("RA ja esta preenchido, voltando para tela inicial...\n");
+                apagaInformacoes(&aluno[i]);
+            }
+        }
+    }
+
+    void ApagaAluno(struct Aluno *aluno, int tamanhoVetor) {
+        // Apaga informações de um aluno pelo index que está registrado
+        int numAluno;
+
+        printf("Lista de alunos:\n");
+
+        for (int c = 0; c < tamanhoVetor; c++) {
+            if (strlen(aluno[c].nome) != 0) {
+                printf("Numero da lista: %d. Nome aluno: %s \n", c, aluno[c].nome);
+            }
+        }
+
+        printf("Qual o index do aluno que deseja apagar (numero na lista)?\n");
+        scanf("%d", &numAluno);
+
+        if (numAluno < tamanhoVetor && numAluno > -1) {
+            if (strlen(aluno[numAluno].nome) != 0) {
+                apagaInformacoes(&aluno[numAluno]);
+                printf("O aluno %d foi apagado!\n", numAluno);
+            } else {
+                printf("Nao podemos apagar o aluno pois ele nao existe!\n");
+            }
+        } else {
+            printf("O numero digitado nao esta dentro do intervalo!\n");
+        }
+    }
+
+    void SalvarDadosBinarios(struct Aluno *aluno, int tamanhoVetor) {
+        FILE *arquivo;
+        arquivo = fopen("teste.bin", "wb");
+
+        if (!arquivo) {
+            printf("Erro ao abrir o arquivo!\n");
+            return;
+        }
+
+        fwrite(aluno, sizeof(struct Aluno), tamanhoVetor, arquivo);
+
+        if (fclose(arquivo) == EOF) {
+            printf("Erro ao fechar o arquivo!\n");
+            return;
+        }
+
+        printf("Dados salvos no arquivo binario com sucesso!\n");
+    }
+
+    void InformacoesRA(struct Aluno *aluno, int tamanhoVetor) {
+    int alunoRA;
+
+        printf("Digite o RA do aluno que deseja ver:\n");
+        scanf("%d", &alunoRA);
+
+        for (int i = 0; i < tamanhoVetor; i++) {
+            if (aluno[i].RA == alunoRA) {
+    
+                break;
+            }
+        }
+
+        printf("Nao foi encontrado nenhum aluno com o RA indicado!\n");
+    }
+
+    void InformacaoTodos(struct Aluno *aluno, int tamanhoVetor) {
+    
+        for (int i = 0; i < tamanhoVetor; i++) {
+            if (strlen(aluno[i].nome) != 0) {
+
+            }
+        }
+    }
+
+    int main() {
+        int *tamanhoVetorAlunos = (int *)malloc(sizeof(int));
+    struct Aluno *aluno = (struct Aluno *)malloc((*tamanhoVetorAlunos) * sizeof(struct Aluno));
+
+    if (aluno == NULL) {
+        printf("Erro na alocacao de memoria para alunos.\n");
+        free(tamanhoVetorAlunos);
+        return 1;
+    }
+
+
+        apagaInformacoes(aluno);
+
+        int escolha = 0;
+
+        while (escolha != 6) {
+            printf("Menu de Operacoes\n");
+            printf("1 - Criar/Armazenar novo aluno.\n");
+            printf("2 - Verificar se tem espaco para armazenar novo aluno.\n");
+            printf("3 - Apagar informacoes de algum aluno.\n");
+            printf("4 - Ver informacao pelo RA do aluno.\n");
+            printf("5 - Ver informacao de todos os alunos.\n");
+            printf("6 - Sair da aplicacao.\n");
+            scanf("%d", &escolha);
+
+            switch (escolha) {
+                case 1:
+                    CriarAluno(aluno, tamanhoVetorAlunos);
+                    break;
+                case 2:
+                    VerificaArmazenamento(aluno, *tamanhoVetorAlunos);
+                    break;
+                case 3:
+                    ApagaAluno(aluno, *tamanhoVetorAlunos);
+                    break;
+                case 4:
+                    InformacoesRA(aluno, *tamanhoVetorAlunos);
+                    break;
+                case 5:
+                    InformacaoTodos(aluno, *tamanhoVetorAlunos);
+                    break;
+                case 6:
+                    printf("Saindo...\n");
+                    break;
+                default:
+                    printf("Essa opcao nao existe!\n");
+                    break;
+            }
+        }
+
+        SalvarDadosBinarios(aluno, *tamanhoVetorAlunos);
+
+        free(aluno);
+        free(tamanhoVetorAlunos);
+        return 0;
+    }
